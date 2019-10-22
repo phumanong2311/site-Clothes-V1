@@ -25,13 +25,13 @@ class DefaultLayout extends React.PureComponent {
     const {categories} = this.state
     return (
       <React.Fragment>
+        {categories && <MobileMenu categories={categories} />}
         <div id='page'>
-          {/* <Header categories={categories} /> */}
-          <Header />
+          <Header categories={categories} />
           {this.props.children}
           <Footer />
         </div>
-        <MobileMenu />
+        
       </React.Fragment>
       
     )

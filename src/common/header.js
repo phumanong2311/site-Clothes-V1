@@ -3,11 +3,12 @@ import HeaderContainer from './headerContainer'
 import Nav from './nav'
 
 class Header extends React.PureComponent {
-  render() {
-    return(
+  render () {
+    const {categories} = this.props
+    return (
       <React.Fragment>
         <HeaderContainer />
-        <Nav />
+        <Nav categories={categories || []}/>
       </React.Fragment>
     )
   }  

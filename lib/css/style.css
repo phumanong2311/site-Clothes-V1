@@ -1791,7 +1791,7 @@ a.btn-button-st:hover {
 	background: #535353;
 }
 #nav li.drop-menu ul {
-	display: none;
+	/* display: none; */
 }
 #nav .normal-text {
 	color: #777;
@@ -2820,7 +2820,7 @@ fieldset {
 	padding: 3px 10px
 }
 .availability.out-of-stock span {
-	color: #fff;
+	color: #fff !important;
 	font-weight: bold
 }
 .availability-only {
@@ -8579,7 +8579,7 @@ input.radio {
 	border-radius: 0;
 	border-right: 48px solid #967adc;
 	min-height: 50px;
-	font-family: "Raleway", serif
+	font-family: "Raleway", serif;
 	font-weight: bold;
 }
 .accordion-faq .panel-heading a:hover {
@@ -8670,5 +8670,8 @@ margin-left: 12px;
   padding: 0 0 12px;
 }
 
+.slider-width-col3 {
+	width: 30%
+}
 
  

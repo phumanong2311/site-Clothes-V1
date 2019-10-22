@@ -6,6 +6,7 @@ export default {
     posts: null,
     productsNew: null,
     productsHot: null,
-    categoryHomeWithProduct: null
+    categoryHomeWithProduct: null,
+    slides: null
   }
 }

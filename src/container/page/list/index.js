@@ -1,10 +1,8 @@
 import React from 'react'
 import queryString from 'query-string'
 import { withContainer } from '../../../context'
-import Advertisement from '../../../component/control/advertisement'
-import LeftSideBar from '../../../component/control/leftSideBar'
-import FeatureItems from '../../../component/control/featureItems'
-
+import ListProduct from '../../../component/control/listProduct'
+import Breadcrumbs from '../../../component/control/breadcrumbs'
 
 class Content extends React.PureComponent {
   constructor (props) {
@@ -62,30 +60,21 @@ class Content extends React.PureComponent {
     let {catId} = this.props
     if (!catId) return
     this.props.api.list.list({qcat: catId, page: page || 1, pageSize: this.state.pageSize}, (err, resp) => {
-      if (err) return
+      if (err || !resp) return
       this.setState({total: resp.total, products: resp.products, nav: resp.categories, category: resp.category, page: page, catId: catId})
     })
   }
 
   render () {
     const {products = []} = this.state
-    const {categories = []} = this.props
-    return <>
-      <Advertisement />
-      <section>
-        <div className='container'>
-          <div className='row'>
-            <div className='col-sm-3'>
-              <LeftSideBar categories={categories || []} />
-            </div>
-
-            <div className='col-sm-9'>
-              <FeatureItems categories={categories || []} isPaging page={this.props.page} pageSize={this.state.pageSize} total={this.state.total} catId={this.props.catId} products={products} onChangePaging={this.onChangePaging}/>
-            </div>
-          </div>
+    const {category, categories = []} = this.props
+    return <section className='main-container col2-left-layout'>
+      <div className='main container'>
+        <div className='row'>
+          <ListProduct category={category} categories={categories || []} isPaging page={this.props.page} pageSize={this.state.pageSize} total={this.state.total} catId={this.props.catId} products={products} onChangePaging={this.onChangePaging}/>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   }
 }
 
@@ -98,12 +87,19 @@ class List extends React.PureComponent {
     let nav = []
     if (categories && categories.length > 0) {
       category = categories.find(el => el.link === catId)
+
+      if (!category) return null
+
       const parentId = category.parentId ? category.parentId : category._id
       nav = categories.filter(el => el.parentId === parentId)
     }
     const parsed = queryString.parse(this.props.location.search)
     let {page} = parsed
-    return <Content page={page ? parseInt(page) : 1} categories={this.props.categories || []} category={category} nav={nav} catId={this.props.match.params.catId} {...this.props} />
+    
+    return <>
+      <Breadcrumbs category={category} />
+      <Content category={category} page={page ? parseInt(page) : 1} categories={this.props.categories || []} category={category} nav={nav} catId={this.props.match.params.catId} {...this.props} />
+    </>
   }
 }
 

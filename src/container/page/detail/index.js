@@ -1,9 +1,10 @@
 import React from 'react'
-import utils from '../../../util'
+import formatCurrency from 'format-currency'
 import { withContainer } from '../../../context'
 import conf from '../../../../config'
-import LeftSideBar from '../../../component/control/leftSideBar'
-import Advertisement from '../../../component/control/advertisement'
+import Breadcrumbs from '../../../component/control/breadcrumbs'
+import RelatedSlider from '../../../component/control/relatedSlider'
+import ProductHotNew from '../../../component/control/productHotNew'
 const domain = conf.server.domain
 
 class Detail extends React.PureComponent {
@@ -15,11 +16,18 @@ class Detail extends React.PureComponent {
       nav: [],
       postlink: null,
       data: null,
-      mainImg: ''
+      mainImg: '',
+      productsHot: [],
+      productsNew: [],
+      selectSize: null,
+      selectColor: null
     }
     this.blockItems = this.blockItems.bind(this)
     this.createMarkup = this.createMarkup.bind(this)
     this.changeMainImg = this.changeMainImg.bind(this)
+    this.renderSliderSizeImage = this.renderSliderSizeImage.bind(this)
+    this.changeSize = this.changeSize.bind(this)
+    this.changeColor = this.changeColor.bind(this)
   }
 
   createMarkup (html) {
@@ -28,7 +36,9 @@ class Detail extends React.PureComponent {
 
   changeMainImg (e) {
     const img = e.target.getAttribute('data-img')
-    this.setState({mainImg: img})
+    this.setState({mainImg: img}, () => {
+      // $('#zoom1').CloudZoom()
+    })
   }
 
   componentDidMount () {
@@ -37,7 +47,7 @@ class Detail extends React.PureComponent {
 
   componentDidUpdate () {
     if (this.props.catId !== this.state.catId || this.props.postlink !== this.state.postlink) {
-      // this.getDetail()
+      this.getDetail()
     }
   }
 
@@ -46,15 +56,22 @@ class Detail extends React.PureComponent {
     const arr = postlink.split('-')
     const postId = arr[arr.length - 1]
     this.props.api.detail.get({id: postId}, (err, data) => {
-      console.log('er111r, data', err, data)
       if (err) return
+      const sizeDefault = data.product.size && data.product.size.length > 0 ? data.product.size[0] : null
+      const colorDefault = sizeDefault && sizeDefault.colors && sizeDefault.colors.length > 0 ? sizeDefault.colors[0] : null
       this.setState({
         catId: catId,
         category: data.category,
         nav: data.categories,
         postlink: postlink,
         data: data.product,
-        mainImg: data.product.image
+        productsNew: data.productsNew,
+        productsHot: data.productsHot,
+        mainImg: data.product.image,
+        selectSize: sizeDefault,
+        selectColor: colorDefault
+      }, () => {
+        // $('#zoom1').CloudZoom()
       })
     })
   }
@@ -67,99 +84,165 @@ class Detail extends React.PureComponent {
     )
   }
 
+  changeSize (k) {
+    const state = _.clone(this.state)
+    const {data} = state
+    const sizeValue = data.size[k]
+    this.setState({
+      selectSize: sizeValue,
+      selectColor: sizeValue.colors && sizeValue.colors.length > 0 ? sizeValue.colors[0] : null
+    })
+  }
+
+  changeColor (k) {
+    const state = _.clone(this.state)
+    const {selectSize} = state
+
+    this.setState({
+      selectColor: selectSize.colors[k]
+    })
+  }
+
+  renderSliderSizeImage () {
+    const {selectColor} = this.state
+    const images = _.get(selectColor, 'images')
+    if (!images || images.length <= 0) return null
+    return <ul className='previews-list slides'>
+      {
+        images.map((el, k) => {
+          const sliderDetailImages = el.sliderDetailImage ? el.sliderDetailImage : el.mainImage
+          return <li key={`image-gallery-${k}`}>
+            <a className=''>
+              <img width='80px' onClick={this.changeMainImg} data-img={el.mainImage} src={`${domain}/${sliderDetailImages}`} alt = "Thumbnail 1"/>
+            </a>
+          </li>
+        })
+      }
+    </ul>
+  }
+
 
   render() {
-    const data = this.state
     const info = this.state.data
+    const {productsNew, productsHot, selectSize, selectColor} = this.state
     const mainImg = _.get(this.state, 'mainImg')
     const galleries = _.get(info, 'gallery') || []
-    let items = {}
-    galleries.forEach((el, k) => {
-      const number = k + 1
-      const keyItems = 'key-' + Math.ceil(number/3)
-      if (keyItems in items) {
-        items[keyItems].push(<img key={el._id} onClick={this.changeMainImg} data-img={`${el}`} src={`${domain}/${el}`} alt='' />)
-      } else {
-        items[keyItems] = []
-        items[keyItems].push(<img key={el._id} onClick={this.changeMainImg} data-img={`${el}`} src={`${domain}/${el}`} alt='' />)
-      }
-    })
-    return (
-      <>
-        <div className='product-details'>
-          <div className='col-sm-5'>
-              <div className='view-product'>
-                {mainImg && <img src={`${domain}/${mainImg}`} alt='' />}
-                {info && info.isHot &&<h3>HOT</h3>}
+    const {categories} = this.props
+
+    const sizes = info && info.size && info.size.length > 0 ? info.size : null
+    const colors = selectSize && selectSize.colors && selectSize.colors.length > 0 ? selectSize.colors : null
+    return <section className='main-container col1-layout'>
+      <div className='main container'>
+        <div className='col-main'>
+          <div className='row'>
+            <div className='product-view'>
+              <div className='product-next-prev'>
+                <a href='#' className='product-next'><span></span></a>
+                <a href='#' className='product-prev'><span></span></a>
               </div>
-              <div id='similar-product' className='carousel slide' data-ride='carousel'>
-                  <div className='carousel-inner'>
-                    {Object.keys(items).map((el, k) => this.blockItems(el, items[el], k === 0 ? 'active' : ''))}
+              <div className='product-essential'>
+                <form action='#' method='post' id='product_addtocart_form'>
+                  <input name='form_key' defaultValue='6UbXroakyQlbfQzK' type='hidden' />
+                  <div className='product-img-box col-lg-4 col-sm-6 col-md-4 col-xs-12 wow bounceInRight animated'>
+                    {info && info.isNewProduct && <div className='new-label new-top-left'> New </div>}
+                    {info && info.isHot && <div className='sale-label sale-top-right'> Hot </div>}
+                    <div className='product-image'>
+                      <div className='large-image'>
+                        <a href={mainImg ? domain + '/' + mainImg : ''} className='cloud-zoom' id='zoom1' rel='useWrapper: false, adjustY:0, adjustX:20'>
+                          {mainImg && <img src={`${domain}/${mainImg}`} alt='' />}
+                        </a>
+                      </div>
+                      <div className='flexslider flexslider-thumb'>
+
+                        {/* <ul className='previews-list slides'>
+                          {
+                            galleries.map((el, k) => {
+                              return <li key={`image-gallery-${k}`}>
+                                <a className='cloud-zoom-gallery'>
+                                  <img width='80px' onClick={this.changeMainImg} data-img={el} src={`${domain}/${el}`} alt = "Thumbnail 1"/>
+                                </a>
+                              </li>
+                            })
+                          }
+                        </ul> */}
+                        {this.renderSliderSizeImage()}
+                      </div>
+                    </div>
+                    
+                    <div className='clear'></div>
                   </div>
-                  <a className='left item-control' href='#similar-product' data-slide='prev'>
-                  <i className='fa fa-angle-left'></i>
-                  </a>
-                  <a className='right item-control' href='#similar-product' data-slide='next'>
-                  <i className='fa fa-angle-right'></i>
-                  </a>
-              </div>
+                  <div className='product-shop col-lg-5 col-sm-6 col-md-5 col-xs-12 bounceInUp animated'>
+                    <div className='product-name'>
+                      <h1>{info && info.title}</h1>
+                    </div>
+                    <div className='ratings'>
+                      <div className='rating-box'>
+                        <div style={{width:'60%'}} className='rating'></div>
+                      </div>
+                      <p className='rating-links'> <a href='#'>1 Review(s)</a> <span className='separator'>|</span> <a href='#'>Add Your Review</a> </p>
+                    </div>
+                    {info && <p className={`availability ${info.inStock ? 'in-stock' : 'out-of-stock'}`}><span>{info.inStock ? 'Còn Hàng' : 'Hết Hàng'}</span></p>}
+                    <div className='price-block'>
+                      <div className='price-box'>
+                        {info && <p className='old-price'> <span className='price-label'>Regular Price:</span> <span id='old-price-48' className= {info && info.priceSale ? 'price' : ''}> {formatCurrency(info.price, { format: '%v %s', symbol: 'đ', minimumFractionDigits: 0 })} </span> </p>}
+                        {
+                          info && info.priceSale && <p className='special-price'> <span className='price-label'>Special Price</span> <span id='product-price-48' className='price'> {formatCurrency(info.priceSale, { format: '%v %s', symbol: 'đ', minimumFractionDigits: 0 })} </span> </p>
+                        }
+                      </div>
+                    </div>
+                 
+                    <div className='size-block'>
+                      <label>Size: </label>
+                      {sizes && sizes.map((el, k) => {
+                        if (selectSize.name === el.name) return <span className='size-box-item active' key={`size-${k}`}>{el.name}</span>
+                        else return <span onClick={() => this.changeSize(k)} className='size-box-item' key={`size-${k}`}>{el.name}</span>
+                      })}
+                    </div>
 
+                    <div className='color-block'>
+                      <label>Color: </label>
+                      {colors && colors.map((el, k) => {
+                        let className = selectColor.color === el.color ? 'color-item active' : 'color-item'
+                        return <span onClick={() => this.changeColor(k)} className={className} key={`size-${k}`} style={{backgroundColor: el.color}} />
+                      })}
+                    </div>
+
+                    <div className='short-description'>
+                      <h2>Quick Overview</h2>
+                      {info && info.description && <p>{info.description}</p>}
+                    </div>
+                    {/* <div className='add-to-box'>
+                      <div className='add-to-cart'>
+                        <label htmlFor='qty'>Quantity:</label>
+                        <div className='pull-left'>
+                          <div className='custom pull-left'>
+                            <button onClick='var result = document.getElementById("qty"); var qty = result.value; if( !isNaN( qty )) result.value++;return false;' className='increase items-count' type='button'><i className='icon-plus'>&nbsp;</i></button>
+                            <input type='text' className='input-text qty' title='Qty' defaultValue='1' maxLength='12' id='qty' name='qty' />
+                            <button onClick='var result = document.getElementById("qty"); var qty = result.value; if( !isNaN( qty ) &amp;&amp; qty &gt; 0 ) result.value--;return false;' className='reduced items-count' type='button'><i className='icon-minus'>&nbsp;</i></button>
+                          </div>
+                        </div>
+                      <div>
+                        <button onClick='productAddToCartForm.submit(this)' className='button btn-cart' title='Add to Cart' type='button'><span><i className='icon-basket'></i> Add to Cart</span></button>
+                      </div>
+                    </div>
+                      <div className='email-addto-box'>
+                        <ul className='add-to-links'>
+                          <li> <a className='link-wishlist' href='wishlist.html'><span>Add to Wishlist</span></a></li>
+                          <li><span className='separator'>|</span> <a className='link-compare' href='compare.html'><span>Add to Compare</span></a></li>
+                        </ul>
+                        <p className='email-friend'><a href='#' className=''><span>Email to a Friend</span></a></p>
+                      </div>
+                    </div> */}
+                  </div>
+                </form>
+              </div>
             </div>
-          
-          <div className='col-sm-7'>
-            <div className='product-information'>
-              {info && info.isNewProduct && <img src='/images/product-details/new.jpg' className='newarrival' alt='' />}
-              <h2>{info && info.title}</h2>
-              <p>Web ID: {info && info.code}</p>
-              <div><img src='/images/product-details/rating.png' alt='' /></div>
-              <span>
-                <span>US ${info && info.price}</span>
-                {/* <label>Quantity:</label> */}
-                {/* <input type='text' defaultValue='3' />
-                <button type='button' className='btn btn-fefault cart'>
-                  <i className='fa fa-shopping-cart'></i>
-                  Add to cart
-                </button> */}
-              </span>
-              <p><b>Availability:</b> In Stock</p>
-              <p><b>Condition:</b> New</p>
-              <p><b>Brand:</b> E-SHOPPER</p>
-              <a href=''><img src='/images/product-details/share.png'  className='share img-responsive'  alt='' /></a>
-            </div>
+            {categories && productsNew && productsNew.length && <RelatedSlider info={info} categories={categories} productsNew={productsNew} />}
+            {categories && categories.length > 0 && productsHot && productsHot.length > 0 && <ProductHotNew categories={categories} title='Sản Phẩm Hot' id='bag-seller-slider-hot' products={productsHot} />}
           </div>
         </div>
-
-        <div className='category-tab shop-details-tab'>
-          <div className='col-sm-12'>
-            <ul className='nav nav-tabs'>
-              <li  className='active'><a href='#reviews' data-toggle='tab'>Details</a></li>
-              {/* <li><a href='#companyprofile' data-toggle='tab'>Company Profile</a></li> */}
-              <li><a href='#tag' data-toggle='tab'>Tag</a></li>
-              {/* <li><a href='#details' data-toggle='tab'>Reviews (5)</a></li> */}
-            </ul>
-          </div>
-        
-          <div className='tab-content'>
-            
-          <div className='tab-pane fade active in' id='reviews' >
-              <div className='col-sm-12'>
-                <ul>
-                  <li><a href=''><i className='fa fa-user'></i>EUGEN</a></li>
-                  <li><a href=''><i className='fa fa-clock-o'></i>{info && utils.getTime(info.createDate)}</a></li>
-                  <li><a href=''><i className='fa fa-calendar-o'></i>{info && utils.formatDateToString(info.createDate)}</a></li>
-                </ul>
-                <p>{info && info.description}</p>
-                <p><b>Write Your Review</b></p>
-                {info && <div dangerouslySetInnerHTML={{__html: info.content}}></div>}
-                
-              </div>
-            </div>
- 
-          </div>
-        
-        </div>
-      </>
-    )
+      </div>
+    </section>
   }
 }
 
@@ -175,24 +258,10 @@ class Wrapper extends React.PureComponent {
       const parentId = category.parentId ? category.parentId : category._id
       nav = categories.filter(el => el.parentId === parentId)
     }
-    return (
-      <>
-        <Advertisement />
-        <section>
-          <div className='container'>
-            <div className='row'>
-              <div className='col-sm-3'>
-                <LeftSideBar categories={categories || []} />
-              </div>
-
-              <div className='col-sm-9'>
-                <Detail api={this.props.api} catId={catId} categories={this.props.categories} category={category} nav={nav} postlink={postlink} />
-              </div>
-            </div>
-          </div>
-        </section>
-      </>
-    )
+    return <>
+        <Breadcrumbs category={category} />
+      <Detail api={this.props.api} catId={catId} categories={this.props.categories} category={category} nav={nav} postlink={postlink} />
+    </>
   }
 }
 export default withContainer(Wrapper, (c, props) => ({

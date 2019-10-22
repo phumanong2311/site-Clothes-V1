@@ -30,7 +30,7 @@ class HeaderContainer extends React.PureComponent {
                         <ul id='cart-sidebar' className='mini-products-list'>
                           <li className='item even'>
                             <a className='product-image' href='#' title='Downloadable Product '>
-                              <img alt='Downloadable Product ' src='products-images/product1.jpg' width='80' />
+                              <img alt='Downloadable Product ' src='/products-images/product1.jpg' width='80' />
                             </a>
                             <div className='detail-item'>
                               <div className='product-details'>
@@ -47,7 +47,7 @@ class HeaderContainer extends React.PureComponent {
                           </li>
                           <li className='item last odd'>
                             <a className='product-image' href='#' title=' Lucky Brand Janis '>
-                              <img alt='Sample Product' src='products-images/product2.jpg' width='80' />
+                              <img alt='Sample Product' src='/products-images/product2.jpg' width='80' />
                             </a>
                             <div className='detail-item'>
                               <div className='product-details'>

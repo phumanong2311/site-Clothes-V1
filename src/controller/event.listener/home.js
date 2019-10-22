@@ -13,5 +13,6 @@ export default (getCtr) => {
     self.data.setGalleries(data.galleries)
     self.data.setCategoryHomeWithProduct(data.categoryHomeWithProduct)
     self.data.setPostmain(data.posts)
+    self.data.setSlides(data.slides)
   })
 }

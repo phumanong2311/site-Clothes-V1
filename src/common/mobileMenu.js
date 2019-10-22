@@ -1,7 +1,32 @@
 import React from 'react'
 
 export default class MobileMenu extends React.PureComponent {
+
+  componentDidMount () {
+    this.loadMenuMb()
+  }
+
+  componentDidUpdate () {
+    this.loadMenuMb()
+  }
+
+  loadMenuMb () {
+    $(function () {
+      jQuery("#mobile-menu").mobileMenu({
+        MenuWidth: 250,
+        SlideSpeed: 300,
+        WindowsMaxWidth: 767,
+        PagePush: !0,
+        FromLeft: !0,
+        Overlay: !0,
+        CollapseMenu: !0,
+        ClassName: "mobile-menu"
+      })
+    })
+  }
   render () {
+    const {categories} = this.props
+    const parent = categories.filter(el => !el.parentId)
     return <div id='mobile-menu'>
       <ul>
         <li>
@@ -17,18 +42,23 @@ export default class MobileMenu extends React.PureComponent {
           </div>
         </li>
         <li>
-          <div className='home'> <a href='index.html'><i className='icon-home'></i>Home</a> </div>
+          <div className='home'> <a href='/'><i className='icon-home'></i>Home</a> </div>
         </li>
-        <li><a href='#'>Pages </a> 
-        <ul>
-          <li><a href='#'>Pages </a></li>
-          <li><a href='#'>Pages </a></li>
-          <li><a href='#'>Pages </a></li>
-          <li><a href='#'>Pages </a></li>
-        </ul>
-      </li>
-        <li><a href='#'>Kids</a> </li>
-        <li><a href='contact_us.html'>Contact Us</a> </li>
+        
+        {parent.map((el, i) => {
+          const children = categories.filter(e => e.parentId === el._id)
+          if (children.length > 0) {
+            return <li key={el._id}><a href={`/${el.link}`}>{el.title}</a>
+              <ul>
+                {children.map((child, i) => {
+                  return <li key={`child-${child._id}`}><a href={`/${child.link}`}>{child.title} </a></li>
+                })}
+              </ul>
+            </li>
+          } else {
+            return <li key={el._id}><a href={`/${el.link}`}>{el.title}</a> </li>
+          }
+        })}
       </ul>
     </div>
   }
